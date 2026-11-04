@@ -6,11 +6,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import re.edu.thuchanh.common.BadRequestException;
+import re.edu.thuchanh.common.PageResponse;
 import re.edu.thuchanh.job.dto.JobResponse;
 
 import java.time.Instant;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -97,5 +101,60 @@ class JobControllerTest {
     void deleteReturns204() throws Exception {
         mockMvc.perform(delete("/jobs/1"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void searchReturnsEnvelope() throws Exception {
+        when(jobService.search(any(), any(), any(), anyInt(), anyInt(), any()))
+                .thenReturn(new PageResponse<>(List.of(), 0, 20, 0L, 0));
+
+        mockMvc.perform(get("/jobs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20));
+    }
+
+    @Test
+    void searchRejectsNegativePageWith400() throws Exception {
+        mockMvc.perform(get("/jobs").param("page", "-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+
+        verifyNoInteractions(jobService);
+    }
+
+    @Test
+    void searchRejectsZeroSizeWith400() throws Exception {
+        mockMvc.perform(get("/jobs").param("size", "0"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(jobService);
+    }
+
+    @Test
+    void searchRejectsUnknownSortWith400() throws Exception {
+        when(jobService.search(any(), any(), any(), anyInt(), anyInt(), any()))
+                .thenThrow(new BadRequestException("Unsupported sort field: password"));
+
+        mockMvc.perform(get("/jobs").param("sort", "password"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    void searchRejectsUnknownStatusWith400() throws Exception {
+        mockMvc.perform(get("/jobs").param("status", "BANANA"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+
+        verifyNoInteractions(jobService);
+    }
+
+    @Test
+    void searchRejectsNegativePageWithFieldDetails() throws Exception {
+        mockMvc.perform(get("/jobs").param("page", "-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors").isNotEmpty());
     }
 }
