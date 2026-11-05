@@ -25,6 +25,8 @@ bin/
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
+docs
+DE_BAI.md
 
 ### NetBeans ###
 /nbproject/private/
