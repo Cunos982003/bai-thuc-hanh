@@ -1,5 +1,7 @@
 package re.edu.thuchanh.common;
 
+import java.util.Locale;
+
 public final class LikePattern {
 
     private LikePattern() {
@@ -13,6 +15,6 @@ public final class LikePattern {
                 .replace("\\", "\\\\")
                 .replace("%", "\\%")
                 .replace("_", "\\_");
-        return "%" + escaped.toLowerCase() + "%";
+        return "%" + escaped.toLowerCase(Locale.ROOT) + "%";
     }
 }

@@ -2,6 +2,8 @@ package re.edu.thuchanh.common;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Locale;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class LikePatternTest {
@@ -29,5 +31,17 @@ class LikePatternTest {
     @Test
     void backslashIsEscapedFirst() {
         assertThat(LikePattern.containing("a\\b")).isEqualTo("%a\\\\b%");
+    }
+
+    @Test
+    void lowercasingMatchesTheDatabaseRegardlessOfDefaultLocale() {
+        Locale original = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr"));
+
+            assertThat(LikePattern.containing("INTERN")).isEqualTo("%intern%");
+        } finally {
+            Locale.setDefault(original);
+        }
     }
 }

@@ -17,6 +17,7 @@ import re.edu.thuchanh.company.CompanyRepository;
 import re.edu.thuchanh.job.dto.JobRequest;
 import re.edu.thuchanh.job.dto.JobResponse;
 
+import java.util.Locale;
 import java.util.Set;
 
 @Service
@@ -94,7 +95,7 @@ public class JobService {
     }
 
     private static String lowercased(String value) {
-        return value == null ? null : value.toLowerCase();
+        return value == null ? null : value.toLowerCase(Locale.ROOT);
     }
 
     private Job findOrThrow(Long id) {

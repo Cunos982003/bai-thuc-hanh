@@ -15,6 +15,7 @@ import re.edu.thuchanh.company.CompanyRepository;
 import re.edu.thuchanh.job.dto.JobResponse;
 
 import java.util.List;
+import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -84,5 +85,23 @@ class JobServiceSearchTest {
 
         verify(jobRepository).search(any(), any(), any(), captor.capture());
         assertThat(captor.getValue().getSort().getOrderFor("createdAt").isDescending()).isTrue();
+    }
+
+    @Test
+    void searchLowercasesLocationRegardlessOfDefaultLocale() {
+        Locale original = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr"));
+            when(jobRepository.search(any(), any(), any(), any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(List.of()));
+            ArgumentCaptor<String> location = ArgumentCaptor.forClass(String.class);
+
+            jobService.search(null, "ISTANBUL", null, 0, 20, "title");
+
+            verify(jobRepository).search(any(), location.capture(), any(), any(Pageable.class));
+            assertThat(location.getValue()).isEqualTo("istanbul");
+        } finally {
+            Locale.setDefault(original);
+        }
     }
 }
